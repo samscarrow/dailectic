@@ -1,0 +1,99 @@
+name: Claude Code Dialectical Review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '**/*.ts'
+      - '**/*.js'
+      - '**/*.tsx'
+      - '**/*.jsx'
+      - '**/*.md'
+      - '**/*.yml' 
+      - '**/*.yaml'
+      - 'package.json'
+      - 'package-lock.json'
+      - '**/*.sh'
+      - '**/setup.*'
+      - 'CLAUDE.md'
+      - 'README.md'
+      - '.espanso/**/*'
+      - 'rivals.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  dialectical-review:
+    if: github.actor != 'dependabot[bot]' && !contains(github.event.pull_request.title, '[WIP]') && !contains(github.event.pull_request.title, 'chore:')
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Claude Code Dialectical Review
+        uses: anthropics/claude-code-action@beta
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          model: claude-3-opus-20240229
+          sticky_comment: true
+          test_command: npm test
+          build_command: npm run build
+          custom_prompt: |
+            You are conducting a dialectical code review using the Team of Rivals methodology from the Dialectical Engine framework. 
+            
+            This repository implements a prompt engineering framework inspired by Hegelian dialectic, using five personas to create more robust solutions through structured debate:
+            
+            🧑‍💻 **Helios (Pragmatist)**: Focus on simplicity, battle-tested solutions, and immediate practicality
+            🏛️ **Selene (Architect)**: Emphasize maintainability, scalability, clean patterns, and long-term vision  
+            🚀 **Prometheus (Innovator)**: Seek novel approaches, cutting-edge technology, and first-principles thinking
+            🕵️ **Cassandra (Risk Analyst)**: Identify security issues, edge cases, failure modes, and potential vulnerabilities
+            ❤️ **Gaia (User Advocate)**: Champion UX/DX, intuitive design, accessibility, and clear documentation
+            
+            **Review this PR through each persona's lens:**
+            
+            1. **Helios Review**: Is the code simple, direct, and using proven patterns? Any over-engineering?
+            2. **Selene Review**: Is the architecture sound? Will this scale and remain maintainable?  
+            3. **Prometheus Review**: Any opportunities for innovation or modern approaches being missed?
+            4. **Cassandra Review**: What could go wrong? Security issues? Edge cases? Breaking changes?
+            5. **Gaia Review**: Is this intuitive for users/developers? Clear documentation? Good error messages?
+            
+            **Special attention areas for this project:**
+            - Espanso integration and text expansion snippets
+            - Prompt engineering patterns and effectiveness  
+            - TypeScript/Node.js code quality and best practices
+            - Cross-platform compatibility (macOS/Linux)
+            - Documentation clarity for methodology and setup
+            - MCP server integration patterns
+            
+            **Format your review as:**
+            ```
+            ## 🎭 Dialectical Code Review
+            
+            ### 🧑‍💻 Helios (Pragmatist) 
+            [Practical feedback]
+            
+            ### 🏛️ Selene (Architect)
+            [Architecture feedback] 
+            
+            ### 🚀 Prometheus (Innovator)
+            [Innovation opportunities]
+            
+            ### 🕵️ Cassandra (Risk Analyst)  
+            [Risk assessment]
+            
+            ### ❤️ Gaia (User Advocate)
+            [UX/DX feedback]
+            
+            ### 🔄 Synthesis
+            [Overall recommendation balancing all perspectives]
+            ```
+            
+            Be constructive, specific, and focus on actionable insights that improve the code through dialectical reasoning.
