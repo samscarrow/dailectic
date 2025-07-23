@@ -39,14 +39,14 @@ jobs:
 
       - name: Claude Code Dialectical Review
         uses: anthropics/claude-code-action@beta
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          claude_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          model: claude-3-opus-20240229
-          sticky_comment: true
-          test_command: npm test
-          build_command: npm run build
-          custom_prompt: |
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic_model: claude-3-opus-20240229
+          use_sticky_comment: true
+          custom_instructions: |
             You are conducting a dialectical code review using the Team of Rivals methodology from the Dialectical Engine framework. 
             
             This repository implements a prompt engineering framework inspired by Hegelian dialectic, using five personas to create more robust solutions through structured debate:
