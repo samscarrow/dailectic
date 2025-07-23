@@ -4,53 +4,164 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-The Dialectical Engine is a prompt engineering framework, not a traditional software project. It implements a "Team of Rivals" methodology for interacting with LLMs to produce more robust and creative solutions through structured debate.
+The Dialectical Engine is a multi-faceted project implementing the "Team of Rivals" methodology for AI interactions:
+1. **Core Framework**: Prompt engineering methodology with text expansion snippets
+2. **MCP Server** (`dialectical-mcp/`): Model Context Protocol server for stateful AI orchestration
+3. **GitHub App** (`github-app-mvp/`): Automated PR reviewer using the dialectical methodology
 
-## Core Concept
+## Architecture
 
-The framework uses a Hegelian dialectic approach:
-1. **Thesis**: Initial problem or code
-2. **Antithesis**: Critiques from 5 rival personas
-3. **Synthesis**: Final solution integrating best insights
+```
+dailectic/
+├── dialectical-mcp/          # MCP server implementation
+│   ├── src/
+│   │   ├── llm/             # LLM provider integrations (Anthropic, OpenAI)
+│   │   ├── personas/        # Persona definitions and types
+│   │   ├── services/        # Core services (orchestrator, critique)
+│   │   ├── sessions/        # Session management
+│   │   ├── security/        # Security patterns and redaction
+│   │   └── tools/           # MCP tool definitions
+│   └── dist/                # Compiled output
+└── github-app-mvp/          # GitHub PR reviewer app
+    └── src/                 # Express server with GitHub webhooks
+```
 
-## The Five Personas
+## Common Development Commands
 
-When implementing or discussing solutions, consider these perspectives:
+### Dialectical MCP Server
+```bash
+cd dialectical-mcp
 
-- **🧑‍💻 Helios (Pragmatist)**: Simple, fast, direct solutions using battle-tested tools
-- **🏛️ Selene (Architect)**: Robust, scalable, maintainable solutions with clean patterns
-- **🚀 Prometheus (Innovator)**: Novel approaches, cutting-edge technology, first-principles thinking
+# Development
+npm install              # Install dependencies
+npm run dev             # Run with hot reload (MCP mode)
+npm run dev:http        # Run HTTP server mode
+
+# Building
+npm run build           # TypeScript compilation (tsconfig.build.json)
+npm run build:full      # Full TypeScript compilation
+
+# Testing
+npm test                # Run Jest tests
+npm run test:watch      # Watch mode
+npm run test:coverage   # Generate coverage report
+
+# Production
+npm start               # Run compiled MCP server
+npm run start:http      # Run compiled HTTP server
+```
+
+### GitHub App MVP
+```bash
+cd github-app-mvp
+
+# Development
+npm install             # Install dependencies
+npm run dev            # Run with hot reload
+
+# Quality Checks
+npm run type-check     # TypeScript type checking
+npm run lint           # ESLint checks
+npm test               # Run Jest tests
+
+# Production
+npm run build          # TypeScript compilation
+npm start              # Run compiled server
+```
+
+## Key Architecture Concepts
+
+### The Five Personas
+Each persona has distinct characteristics and focuses:
+- **🧑‍💻 Helios (Pragmatist)**: Battle-tested solutions, simplicity, shipping fast
+- **🏛️ Selene (Architect)**: Clean architecture, patterns, scalability, maintainability
+- **🚀 Prometheus (Innovator)**: Novel approaches, cutting-edge tech, paradigm shifts
 - **🕵️ Cassandra (Risk Analyst)**: Security, edge cases, failure modes, vulnerabilities
-- **❤️ Gaia (User Advocate)**: UX/DX, intuitive design, clear documentation
+- **❤️ Gaia (User Advocate)**: UX/DX, clarity, documentation, empathy
 
-## Project Structure
+### MCP Server Architecture
+- **Stateful Sessions**: Maintains context across multiple AI interactions
+- **LLM Abstraction**: Provider-agnostic interface supporting Anthropic and OpenAI
+- **HTTP/stdio Modes**: Can run as MCP server (for Claude Desktop) or HTTP API
+- **Security Layer**: Pattern matching and redaction for sensitive data
 
-This is a minimal project containing:
-- `README.md`: Main documentation and philosophy
-- `CLAUDE.md`: This file
-- Missing components referenced in README:
-  - `setup.sh`: Automated setup script (needs creation)
-  - `rivals.yml`: Espanso configuration file (needs creation)
+### Integration Flow
+1. **MCP Tools**: `critique`, `team_debate`, `synthesize`, `create_session`, `list_sessions`
+2. **Session Management**: Tracks critiques and context for synthesis
+3. **LLM Orchestration**: Parallel persona processing with proper prompt structuring
 
-## Development Tasks
+## Environment Variables
 
-When asked to work on this project, common tasks include:
+### Dialectical MCP Server
+- `LLM_PROVIDER`: "anthropic" | "openai" | "mock"
+- `LLM_API_KEY`: API key for chosen provider
+- `MCP_HTTP_PORT`: Port for HTTP mode (default: 8080)
 
-1. **Creating the setup.sh script**: Should install Espanso and configure text snippets
-2. **Creating rivals.yml**: Espanso configuration with text expansion snippets
-3. **Enhancing the framework**: Adding new personas or improving existing ones
-4. **Documentation**: Explaining the methodology and providing examples
+### GitHub App MVP
+- `GITHUB_APP_ID`: GitHub App identifier
+- `GITHUB_PRIVATE_KEY`: PEM-formatted private key
+- `GITHUB_WEBHOOK_SECRET`: Webhook validation secret
+- `MCP_SERVER_URL`: Dialectical MCP server URL (default: http://localhost:8080)
 
-## Text Expansion Snippets
+## Testing Strategy
 
-The framework relies on these text triggers:
-- `:tor` - Full Team of Rivals master prompt
-- `:synthesizer` - Synthesis step prompt
-- `:helios`, `:selene`, `:prometheus`, `:cassandra`, `:gaia` - Individual persona critiques
+### Unit Tests
+- Located in `tests/` directories
+- Use Jest with ts-jest for TypeScript support
+- Mock external dependencies (LLM providers, GitHub API)
 
-## Important Notes
+### Running Specific Tests
+```bash
+# Run a single test file
+npm test -- path/to/test.spec.ts
 
-- This is a methodology/framework, not a software application
-- Implementation depends on Espanso text expander
-- The goal is to improve AI interactions through structured debate
-- When creating scripts or configs, ensure cross-platform compatibility (macOS/Linux)
+# Run tests matching a pattern
+npm test -- --testNamePattern="critique"
+
+# Debug a test
+node --inspect-brk node_modules/.bin/jest --runInBand path/to/test.spec.ts
+```
+
+## Docker Development
+
+```bash
+# Build and run all services
+docker-compose up
+
+# Individual services
+docker build -t dialectical-mcp ./dialectical-mcp
+docker build -t dialectical-github-app ./github-app-mvp
+```
+
+## Important Architectural Decisions
+
+1. **MCP vs HTTP**: The MCP server supports both protocols for flexibility
+2. **Stateful Design**: Sessions maintain context for complex dialectical workflows
+3. **LLM Abstraction**: Provider switching without code changes
+4. **Security First**: Built-in patterns for sensitive data handling
+5. **Modular Personas**: Easy to add/modify personas in `personas/definitions.ts`
+
+## Common Development Tasks
+
+### Adding a New Persona
+1. Edit `dialectical-mcp/src/personas/definitions.ts`
+2. Add persona to `PERSONAS` object with philosophy, approach, style
+3. Update types in `personas/types.ts` if needed
+4. Test with `npm run dev` and use the `critique` tool
+
+### Modifying LLM Behavior
+1. LLM providers in `dialectical-mcp/src/llm/providers/`
+2. Implement `LLMProvider` interface for new providers
+3. Update factory in `llm/factory.ts`
+
+### Debugging MCP Integration
+1. Run MCP server with verbose logging: `DEBUG=* npm run dev`
+2. Check Claude Desktop logs: `~/Library/Logs/Claude/` (macOS)
+3. Test tools directly via HTTP: `curl http://localhost:8080/tools`
+
+## Deployment Considerations
+
+1. **MCP Server**: Needs LLM API access, consider rate limits
+2. **GitHub App**: Requires public webhook endpoint (use ngrok for local dev)
+3. **Security**: Never commit API keys; use environment variables
+4. **Monitoring**: Both services log to stdout, integrate with your logging solution
