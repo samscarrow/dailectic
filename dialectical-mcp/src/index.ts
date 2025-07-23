@@ -10,24 +10,25 @@ import {
 import { z } from 'zod';
 
 import { ALL_PERSONAS, SYNTHESIZER_PROMPT } from './personas/definitions.js';
-import { SessionManager } from './sessions/manager.js';
+import { PersistentSessionManager } from './sessions/persistent-manager.js';
 import { CritiqueService } from './services/critique-service.js';
 import { Orchestrator } from './services/orchestrator.js';
 import { ContextualPromptBuilder } from './services/contextual-prompt-builder.js';
 import { StructuredOutputParser } from './services/structured-output-parser.js';
 import { LLMFactory } from './llm/factory.js';
 import { buildSynthesisPrompt, buildPersonaSystemPrompt } from './tools/prompts.js';
-import { createTCPService, TCP_INTEGRATION_INFO } from '../../integrations/tcp/index.js';
+// import { createTCPService, TCP_INTEGRATION_INFO } from '../../integrations/tcp/index.js';
+const TCP_INTEGRATION_INFO = { version: '1.0', compressionStats: { vsDocumentation: '10:1' } };
 
 // Initialize services
 const llmProvider = LLMFactory.fromEnv();
-const sessionManager = new SessionManager();
+const sessionManager = new PersistentSessionManager();
 const critiqueService = new CritiqueService(llmProvider);
 const contextBuilder = new ContextualPromptBuilder();
 const outputParser = new StructuredOutputParser();
 const orchestrator = new Orchestrator(sessionManager, critiqueService, contextBuilder, outputParser);
 
-// Initialize TCP Service (async initialization handled in main)
+// Initialize TCP Service (disabled for now)
 let tcpService: any = null;
 
 // Schema definitions
@@ -94,7 +95,7 @@ const TCPCompressDebateArgsSchema = z.object({
 const TCPSystemStatsArgsSchema = z.object({});
 
 // Create MCP server
-const server = new Server(
+export const server = new Server(
   {
     name: 'dialectical-mcp',
     version: '3.0.0',
@@ -675,22 +676,38 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 // Cleanup old sessions and workflows periodically
-setInterval(() => {
-  sessionManager.cleanupOldSessions();
+setInterval(async () => {
+  await sessionManager.cleanupOldSessions();
   orchestrator.cleanupOldWorkflows();
 }, 60 * 60 * 1000); // Every hour
 
 // Start the server
 async function main() {
-  // Initialize TCP Service
+  // Initialize persistent storage
+  console.error('Initializing persistent storage...');
   try {
-    console.error('Initializing TCP Service...');
-    tcpService = await createTCPService();
-    console.error('✅ TCP Service initialized successfully');
+    await sessionManager.initialize();
+    const healthCheck = await sessionManager.getStorageHealth();
+    if (healthCheck.status === 'healthy') {
+      console.error('✅ Storage initialized successfully');
+    } else {
+      console.error(`⚠️  Storage health check failed: ${healthCheck.details}`);
+    }
   } catch (error) {
-    console.error('⚠️  TCP Service initialization failed:', error);
-    console.error('   TCP tools will be unavailable');
+    console.error('❌ Storage initialization failed:', error);
+    console.error('   Server will exit...');
+    process.exit(1);
   }
+
+  // TCP Service disabled for now
+  // try {
+  //   console.error('Initializing TCP Service...');
+  //   tcpService = await createTCPService();
+  //   console.error('✅ TCP Service initialized successfully');
+  // } catch (error) {
+  //   console.error('⚠️  TCP Service initialization failed:', error);
+  //   console.error('   TCP tools will be unavailable');
+  // }
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

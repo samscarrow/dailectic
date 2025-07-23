@@ -1,4 +1,4 @@
-import { SessionManager } from '../sessions/manager.js';
+import { PersistentSessionManager } from '../sessions/persistent-manager.js';
 import { CritiqueService } from './critique-service.js';
 import { ContextualPromptBuilder } from './contextual-prompt-builder.js';
 import { StructuredOutputParser } from './structured-output-parser.js';
@@ -25,7 +25,7 @@ export class Orchestrator {
   private workflows: Map<string, DebateWorkflow> = new Map();
   
   constructor(
-    private sessionManager: SessionManager,
+    private sessionManager: PersistentSessionManager,
     private critiqueService: CritiqueService,
     private contextBuilder: ContextualPromptBuilder,
     private outputParser: StructuredOutputParser
