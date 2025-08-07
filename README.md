@@ -66,7 +66,7 @@ After reviewing the debate, you guide the AI to the final solution.
 
 A shell script is provided to set up your environment automatically.
 
-1.  **Download:** Get the `setup.sh` script from this repository.
+1.  **Clone the Repository:** Get both `setup.sh` and `rivals.yml` from this repository.
 2.  **Make it Executable:** Open your terminal and run:
     ```bash
     chmod +x setup.sh
